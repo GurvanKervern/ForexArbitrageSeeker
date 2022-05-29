@@ -58,8 +58,8 @@ sub check_if_trades_are_profitable {
     my $last_amount = $trades_list_ref->[-1]->{'amount'};
     my $theoretical_amount = $currency_hash_ref->{$first_currency}->{$last_currency} * $first_amount;
     if($last_amount > $theoretical_amount / 100 * 101) {
-        printf "PROFIT!!! Should have been %.2f, but it is %.2f %s\n", $theoretical_amount, $last_amount, $last_currency if $debugProfit;
-        print_trade_list($trades_list_ref) if $debugProfit;
+        printf "PROFIT!!! Should have been %.2f, but it is %.2f %s\n", $theoretical_amount, $last_amount, $last_currency ;
+        print_trade_list($trades_list_ref) ;
         return 1;
     } else {
         return 0;

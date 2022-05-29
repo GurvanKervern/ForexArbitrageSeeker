@@ -54,7 +54,6 @@ sub get_profitability {
     my $theoretical_amount = $currency_hash_ref->{$first_currency}->{$last_currency} * $first_amount;
     return -100 if $theoretical_amount == 0;
     my $profitability = (($last_amount / $theoretical_amount) - 1 ) * 100;
-    #if($last_amount > $theoretical_amount / 100 * 101) {
     return $profitability;
 }
 
