@@ -1,10 +1,11 @@
-package ForexArbitrageExplorer2;
+package ForexArbitrageExplorer_DF_increasingProf;
 
 use strict;
 use warnings;
 use Data::Dumper;
 
-my $wanted_profitability = 1;
+my $wanted_profitability = 0.8;
+my $profitability_step = 0.01;
 
 sub string_a_perl {
     my ($trade_list_ref, $currency_hash_ref) = @_;
@@ -18,26 +19,33 @@ sub string_a_perl {
        }
     }
     my ($profitability, $loop_profitability) = get_profitabilities($trade_list_ref, $currency_hash_ref);
-    write_profit($trade_list_ref, $profitability) if ($profitability > $wanted_profitability);
+    $trade_list_ref->[-1]->{'profitability'} = $profitability;
+    $trade_list_ref->[-1]->{'loop_profitability'} = $loop_profitability;
     if($profitability > $wanted_profitability or $loop_profitability > $wanted_profitability or $list_length <= 3) {
         #TODO add last profitability conditions and list length here
-        my $last_currency = $trade_list_ref->[-1]->{'currency'};
-        for my $new_currency (keys %{$currency_hash_ref->{$last_currency}}) {
-            my $rate = $currency_hash_ref->{$last_currency}->{$new_currency};
-            next if $rate == 0;
-            my $new_amount = $rate * $trade_list_ref->[-1]->{'amount'};
-            my @new_trade_list = @$trade_list_ref;
-            push @new_trade_list, {'currency' => $new_currency, 'amount' => $new_amount};
-            string_a_perl(\@new_trade_list, $currency_hash_ref);
+        if($list_length <= 3 or 
+            $trade_list_ref->[-1]->{'profitability'} > $trade_list_ref->[-2]->{'profitability'} + $profitability_step or 
+            $trade_list_ref->[-1]->{'loop_profitability'} > $trade_list_ref->[-2]->{'loop_profitability'} + $profitability_step ) {
+            #write_profit($trade_list_ref, $profitability) if ($profitability >= $wanted_profitability);
+            my $last_currency = $trade_list_ref->[-1]->{'currency'};
+            for my $new_currency (keys %{$currency_hash_ref->{$last_currency}}) {
+                my $rate = $currency_hash_ref->{$last_currency}->{$new_currency};
+                next if $rate == 0;
+                my $new_amount = $rate * $trade_list_ref->[-1]->{'amount'};
+                my @new_trade_list = @$trade_list_ref;
+                push @new_trade_list, {'currency' => $new_currency, 'amount' => $new_amount};
+                string_a_perl(\@new_trade_list, $currency_hash_ref);
+            }
         }
     }
 }
 
 sub start_search {
     my ($currency_hash_ref) = @_;
-    for my $symbol ( keys %$currency_hash_ref) {
+    #for my $symbol ( keys %$currency_hash_ref) {
+    for my $symbol (qw/EUR USD JPY GBP CHF CAD AUD NZD HKD SGD CNY NOK SEK DKK ISK/) {
         my $trade_list_ref = [];
-        push(@$trade_list_ref, {'currency' => $symbol,'amount' => 1000});
+        push(@$trade_list_ref, {'currency' => $symbol,'amount' => 1000, 'profitability' => 1, 'loop_profitability' => 1});
         string_a_perl($trade_list_ref, $currency_hash_ref);
     }
 }
@@ -48,7 +56,8 @@ sub manage_loop {
     if($trade_list_ref->[0]->{'currency'} ne $trade_list_ref->[-1]->{'currency'}) {
         my $profitability = get_profitability($trade_list_ref, $currency_hash_ref);
         if($profitability > $wanted_profitability) {
-            write_profit($trade_list_ref, $profitability);
+            #write_profit($trade_list_ref, $profitability);
+            1;
         }
         #then remove other currencies at the front of the loop
         while($trade_list_ref->[0]->{'currency'} ne $trade_list_ref->[-1]->{'currency'}) {
