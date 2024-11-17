@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use JSON;
+use Data::Dumper;
 
 sub populate_hash {
     my ($directory, $hash_ref) = @_;
@@ -32,17 +33,18 @@ sub replace_with_higher_values {
     my $base_currency = $data->{'base_code'} ;
     my $current_rates = $hash_ref->{$base_currency};
     my $new_rates = $data->{'conversion_rates'};
-    #print "$new_rates\n";
     my %n_r = %$new_rates;
     #for my $symbol (keys( %{$new_rates})) {
     for my $symbol (keys %n_r) {
         my $old_value = $current_rates->{$symbol};
         my $new_value = $new_rates->{$symbol};
         if(! defined $old_value) {
-            $current_rates->{$symbol} = $new_value;
+            $hash_ref->{$base_currency}->{$symbol} = $new_value;
+            #$current_rates->{$symbol} = $new_value;
         } elsif($new_value > $old_value) {
             #print STDERR "Replaced $base_currency $symbol from $old_value to $new_value\n";
-            $current_rates->{$symbol} = $new_value;
+            #$current_rates->{$symbol} = $new_value;
+            $hash_ref->{$base_currency}->{$symbol} = $new_value;
         }
     }
 }
